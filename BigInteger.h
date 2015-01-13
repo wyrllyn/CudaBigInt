@@ -9,25 +9,27 @@ enum OperationType {
 	SUBSTRACT,
 	MULTIPLY,
 	DIVIDE,
-	TODO
+	FACTORIAL,
+	GCD,
+	ERROR
 };
 
-OperationType identifyOperationType(const char*);
+OperationType identifyOperationType(const char* op);
 
 class BigInteger {
 
 private:
-	std::vector<char> number;
+	std::string number;
 
 public:
-	BigInteger(std::string number);
+	__device__ __host__ BigInteger(std::string number);
 
-	__device__ void add(const BigInteger& other);
-	__device__ void substract(const BigInteger& other);
-	__device__ void multiply(const BigInteger& other);
-	__device__ void divide(const BigInteger& other);
-	__device__ void factoriel(const BigInteger& other);
-	__device__ void whateverpgcdisinenglish(const BigInteger& other);
+	__device__ __host__ void add(const BigInteger& other);
+	__device__ __host__ void substract(const BigInteger& other);
+	__device__ __host__ void multiply(const BigInteger& other);
+	__device__ __host__ void divide(const BigInteger& other);
+	__device__ __host__ void factorial(const BigInteger& other);
+	__device__ __host__ void greatestCommonDivisor(const BigInteger& other);
 };
 
 #endif
