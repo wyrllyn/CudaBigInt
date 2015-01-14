@@ -24,6 +24,8 @@ public:
 	//__device__ __host__ BigInteger(const char* number, int size);
 
 	__device__ __host__ void setNumber(const char* nuNumber, int nuSize);
+	/// convert '0' to 0
+	void zero();
 
 	__device__ __host__ void add(const BigInteger& other);
 	__device__ __host__ void substract(const BigInteger& other);

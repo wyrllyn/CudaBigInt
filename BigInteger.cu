@@ -23,7 +23,7 @@ OperationType identifyOperationType(const char* op) {
 	}
 }
 
-BigInteger::BigInteger() : number("0"), size(1) {}
+BigInteger::BigInteger() : number(0), size(1) {}
 
 /*BigInteger::BigInteger(const char* number, int size) : size(size) {
 
@@ -39,6 +39,12 @@ void BigInteger::setNumber(const char* nuNumber, int nuSize) {
 	}
 }
 
+void BigInteger::zero() {
+	for (int i = 0; i < size; i++) {
+		number[i] -= '0';
+	}
+}
+
 
 int main(int argc, char** argv) {
 
@@ -47,12 +53,14 @@ int main(int argc, char** argv) {
 	if (argc >= 2) {
 		opType = identifyOperationType(argv[1]);
 		left.setNumber(argv[2], string(argv[2]).size());
+		left.zero();
 		switch (opType) {
 		case ADD:
 		case SUBSTRACT:
 		case MULTIPLY:
 		case DIVIDE:
 			right.setNumber(argv[3], string(argv[3]).size());
+			right.zero();
 			break;
 		case ERROR:
 			cout << "Unrecognised operation type: " << argv[1] << endl;
