@@ -1,6 +1,7 @@
 #include "BigInteger.h"
 
 #include <iostream>
+#include <string>
 
 using namespace std;
 
@@ -22,27 +23,75 @@ OperationType identifyOperationType(const char* op) {
 	}
 }
 
+BigInteger::BigInteger() : number("0"), size(1) {}
+
+/*BigInteger::BigInteger(const char* number, int size) : size(size) {
+
+}*/
+
+
+void BigInteger::setNumber(const char* nuNumber, int nuSize) {
+	size = nuSize;
+	delete number;
+	number = new char[size];
+	for (int i = 0; i < size; i++) {
+		number[i] = nuNumber[i];
+	}
+}
+
+
 int main(int argc, char** argv) {
 
-	string left, right;
+	BigInteger left, right;
 	OperationType opType;
-	if (argc >= 3) {
+	if (argc >= 2) {
 		opType = identifyOperationType(argv[1]);
-		left = string(argv[2]);
+		left.setNumber(argv[2], string(argv[2]).size());
 		switch (opType) {
 		case ADD:
 		case SUBSTRACT:
 		case MULTIPLY:
 		case DIVIDE:
-			right = string(argv[3]);
+			right.setNumber(argv[3], string(argv[3]).size());
 			break;
+		case ERROR:
+			cout << "Unrecognised operation type: " << argv[1] << endl;
 		}
 	} else {
 		cout << "Insufficient number of arguments" << endl;
 	}
 
-	/*switch (opType) {
+	BigInteger* g_left, *g_right;
+	cudaMalloc( (void**) &g_left, sizeof(BigInteger));
+	cudaMalloc( (void**) &g_right, sizeof(BigInteger));
+
+	cudaMemcpy(g_left, &left, sizeof(BigInteger), cudaMemcpyHostToDevice);
+	cudaMemcpy(g_right, &right, sizeof(BigInteger), cudaMemcpyHostToDevice);
+
+	dim3 block, grid;
+	switch (opType) {
+	case ADD:
+
+		break;
+	case SUBSTRACT:
+
+		break;
+	case MULTIPLY:
+
+		break;
+	case DIVIDE:
+
+		break;
+	case FACTORIAL:
+
+		break;
+
+	case GCD:
+
+		break;
 	default:
-	}*/
+		cout << "Reaching default case." << endl;
+		break;
+	}
 
 }

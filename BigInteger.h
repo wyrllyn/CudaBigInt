@@ -1,9 +1,6 @@
 #ifndef BIGINTEGER_H
 #define BIGINTEGER_H
 
-#include <string>
-#include <vector>
-
 enum OperationType {
 	ADD,
 	SUBSTRACT,
@@ -19,10 +16,14 @@ OperationType identifyOperationType(const char* op);
 class BigInteger {
 
 private:
-	std::string number;
+	char* number;
+	int size;
 
 public:
-	__device__ __host__ BigInteger(std::string number);
+	__device__ __host__ BigInteger();
+	//__device__ __host__ BigInteger(const char* number, int size);
+
+	__device__ __host__ void setNumber(const char* nuNumber, int nuSize);
 
 	__device__ __host__ void add(const BigInteger& other);
 	__device__ __host__ void substract(const BigInteger& other);
