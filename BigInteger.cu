@@ -116,8 +116,14 @@ How to use this method :
 */
 
 	for (int i = size_biggest - 1; i >= 0; i--) {
-		tmp = second[i] + first[i] + carry;
-cout << "__ " << (int) first[i] << " + " << (int) second[i] << " + " << carry << " = " << tmp << endl;
+		if (i - diff >= 0) {
+			tmp = second[i - diff] + first[i] + carry;
+			cout << "__ " << (int) first[i] << " + " << (int) second[i - diff] << " + " << carry << " = " << tmp << endl;
+		} else {
+			tmp = first[i] + carry;
+			cout << "__ " << (int) first[i] << " + " << carry << " = " << tmp << endl;
+		}
+
 		if (tmp >= 10) {
 			carry = 1;
 			tmp = tmp % 10;
@@ -126,7 +132,7 @@ cout << "__ " << (int) first[i] << " + " << (int) second[i] << " + " << carry <<
 			carry = 0;
 		}
 		newB[index] = tmp;
-cout << index << "___ " << (int) newB[index] << endl;
+		cout << index << "___ " << (int) newB[index] << endl;
 		index--;
 	}
 
@@ -146,14 +152,14 @@ cout << index << "~~~ " << (int) newB[index] << endl;
 	}*/
 	if (carry != 0) {
 		newB[index] = carry;
-cout << index << "### " << (int) newB[index] << endl;
+		cout << index << "### " << (int) newB[index] << endl;
 	}
 
-cout << "cheking final result" << endl;
-for (int i = 0; i < *size_newB; i++) {
-	cout << (int) newB[i];
-}
-cout << endl;
+	cout << "cheking final result" << endl;
+	for (int i = 0; i < *size_newB; i++) {
+		cout << (int) newB[i];
+	}
+	cout << endl;
 
 }
 
@@ -191,12 +197,15 @@ int main(int argc, char** argv) {
 	///
 	/// Testing block
 	///
-	char* nu = new char[2], * g_nu;
-	char* first = new char[2];
-	first[0] = 9; first[1] = 2;
-	char* second = new char[2];
-	second[0] = 1; second[1] = 9;
-	int nuSize = 2;
+	#define SIZE_FIRST 2
+	#define SIZE_SECOND 1
+	#define NU_SIZE 3
+	char* nu = new char[NU_SIZE], * g_nu;
+	char* first = new char[SIZE_FIRST];
+	first[0] = 9; first[1] = 5;
+	char* second = new char[SIZE_SECOND];
+	second[0] = 7;
+	int nuSize = NU_SIZE;
 	/*
 	char* g_first, *g_second;
 	cudaMalloc( (void**) &g_first, sizeof(char) * 2 );
@@ -207,8 +216,19 @@ int main(int argc, char** argv) {
 	kernel_add<<<grid, block>>>(g_nu, g_first, g_second, 2, 2, &nuSize);
 	cudaMemcpy(nu, g_nu, sizeof(char) * 2, cudaMemcpyDeviceToHost);
 	*/
-kernel_add(nu, first, second, 2, 2, &nuSize);
-	cout << (int) first[0] << (int) first[1] << " + " << (int) second[0] << (int) second[1] << " = " << (int) nu[0] << (int) nu[1] << (int) nu[2]<< endl;
+	kernel_add(nu, first, second, SIZE_FIRST, SIZE_FIRST - SIZE_SECOND, &nuSize);
+	for (int i = 0; i < SIZE_FIRST; i++) {
+		cout << (int) first[i];
+	}
+	cout << " + ";
+	for (int i = 0; i < SIZE_SECOND; i++) {
+		cout << (int) second[i];
+	}
+	cout << " = ";
+	for (int i = 0; i < nuSize; i++) {
+		cout << (int) nu[i];
+	}
+	cout << endl;
 	///
 	/// End of testing block
 	///
