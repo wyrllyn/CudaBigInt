@@ -6,15 +6,15 @@
 using namespace std;
 
 OperationType identifyOperationType(const char* op) {
-	if (op == "+") {
+	if (op[0] == '+') {
 		return ADD;
-	} else if (op == "-") {
+	} else if (op[0] == '-') {
 		return SUBSTRACT;
-	} else if (op == "*") {
+	} else if (op[0] == '*') {
 		return MULTIPLY;
-	} else if (op == "/") {
+	} else if (op[0] == '/') {
 		return DIVIDE;
-	} else if (op == "!") {
+	} else if (op[0] == '!') {
 		return FACTORIAL;
 	} else if (op == "pgcd") {
 		return GCD;
@@ -33,9 +33,20 @@ BigInteger::BigInteger() : number(0), size(1) {}
 void BigInteger::setNumber(const char* nuNumber, int nuSize) {
 	size = nuSize;
 	delete number;
+	if (nuNumber[0] != '-' && nuNumber[0] != '+')
+		size++;
+
 	number = new char[size];
-	for (int i = 0; i < size; i++) {
-		number[i] = nuNumber[i];
+	if (nuNumber[0] == '-')
+		number[0] = '-';
+	else
+		number[0] = '+';
+
+	for (int i = 1; i < size; i++) {
+		if (nuNumber[0] != '-' && nuNumber[0] != '+')
+			number[i] = nuNumber[i - 1];
+		else
+			number[i] = nuNumber[i];
 	}
 }
 
@@ -44,6 +55,14 @@ void BigInteger::zero() {
 		if (number[i] == '-') continue;
 		number[i] -= '0';
 	}
+}
+
+void BigInteger::print() {
+	cout << number[0];
+	for (int i = 1; i < size; i++) {
+		cout << (int) number[i];
+	}
+	cout << endl;
 }
 
 void BigInteger::add(const BigInteger& other) {
@@ -88,20 +107,6 @@ void bump(char* number, int size) {
 		number[i] += '0';
 	}
 }
-
-__device__ void add_minus(char* bi, int size) {
-	for (int i = size; i > 0 ; i--) {
-		bi[i] = bi[i - 1];
-	}
-	bi[0] = '-';
-}
-__device__ void remove_minus(char* bi, int size) {
-	for (int i = 0; i < size ; i++) {
-		bi[i] = bi[i+1];
-	}
-}
-
-
 
 
 //init 
@@ -382,11 +387,12 @@ void kernel_div(char* newB, const char* first, const char* second, int size_firs
 }
 
 int main(int argc, char** argv) {
-	cout << "This program assumes that its user enters coherent arguments, such as -25 + 12" << endl;
+	cout << "This program assumes that its user enters coherent arguments (op number number), such as * -25 12" << endl;
 	cout << "Enter boggus data at your own risks..." << endl;
 
 	BigInteger left, right;
 	OperationType opType;
+	cout << argv[1] << " " << argv[2] << " " << argv[3] << endl;
 	if (argc >= 2) {
 		opType = identifyOperationType(argv[1]);
 		left.setNumber(argv[2], string(argv[2]).size());
@@ -401,10 +407,15 @@ int main(int argc, char** argv) {
 			break;
 		case ERROR:
 			cout << "Unrecognised operation type: " << argv[1] << endl;
+			break;
 		}
 	} else {
 		cout << "Insufficient number of arguments" << endl;
 	}
+	cout << "Here is what we have:" << endl;
+	left.print();
+	cout << argv[1] << endl;
+	right.print();
 
 	cudaEvent_t start, stop;
 	cudaEventCreate(&start);

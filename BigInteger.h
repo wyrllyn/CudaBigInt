@@ -23,9 +23,10 @@ public:
 	__device__ __host__ BigInteger();
 	//__device__ __host__ BigInteger(const char* number, int size);
 
-	__device__ __host__ void setNumber(const char* nuNumber, int nuSize);
+	__host__ void setNumber(const char* nuNumber, int nuSize);
 	/// convert '0' to 0
 	void zero();
+	void print();
 
 	__device__ __host__ void add(const BigInteger& other);
 	__device__ __host__ void substract(const BigInteger& other);
@@ -35,13 +36,12 @@ public:
 	__device__ __host__ void greatestCommonDivisor(const BigInteger& other);
 };
 
+
 bool isNeg(char* bi);
 __device__ __host__ int update(char* toUpdate, int value);
 __device__ __host__ void init(int size, char* toFill);
 __device__ __host__ int isFirstBiggerThanSeond(const char* first, const char* second, int size);
 
-__device__ __host__ void add_minus(char* bi, int size);
-__device__ __host__ void remove_minus(char* bi, int size);
 
 /*__global__*/ void kernel_add(char* newB, char* first, char* second, int size_first, int size_second, int * size_newB);
 /*__global__ */void kernel_sub(char* newB, const char* first, const char* second, int size_biggest, int diff, int * size_newB);
