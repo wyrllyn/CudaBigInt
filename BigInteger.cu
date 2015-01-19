@@ -84,6 +84,19 @@ __device__ int update(char* toUpdate, int value) {
 	return toReturn;
 }
 
+/**
+ * Returns true if first is bigger or equal to second.
+ * Note: assumes that both numbers have the same size.
+ */
+int isFirstBiggerThanSecond(const char* first, const char* second, int size) {
+	for (int i = 0; i < size; i++) {
+		if (first[i] > second[i]) return 1;
+		else if (first[i] < second[i]) return 0;
+		else continue;
+	}
+	return 1;
+}
+
 /*
 How to use this method :
 - newB and size newB contains the result
@@ -163,6 +176,68 @@ cout << index << "~~~ " << (int) newB[index] << endl;
 
 }
 
+/**
+ * first is divided by second.
+ * Note: since we are working with integers, the quotient can't be bigger than the dividend.
+ * Also, if the divisor is bigger than the dividend, then the result is zero.
+ */
+void kernel_div(char* newB, const char* first, const char* second, int size_first, int size_second, int * size_newB) {
+	if (size_first > size_second
+		|| (size_first == size_second && isFirstBiggerThanSecond(first, second, size_first))
+	) {
+		*size_newB = size_first;
+	} else {
+		*size_newB = 1;
+		init(*size_newB, newB);
+		return;
+	}
+
+
+	char* temp = NULL;
+	init(size_second + 1, temp);
+	int t = 0; // temp's index
+	int n = 0; // newB's index
+	for (int i = size_first - 1; i >= 0; i -= t) {
+		t = 0;
+		for (int j = i - size_second; j <= i; j++) {
+			if (j >= 0) {
+				temp[t] = first[j];
+				t++;
+			}
+		}
+		// verify that we are not attempting to divide something too small
+		if (isFirstBiggerThanSecond(second, temp, size_second)) {
+			t = 0;
+			for (int j = i - size_second - 1; j <= i; j++) {
+				if (j < 0) {
+					// nothing left to divide, exit function
+					return;
+				} else {
+					temp[t] = first[j];
+					t++;
+				}
+			}
+		}
+		// now that we have our thing, let's get to the division itself
+		char res = 0;
+		char* sub_res = NULL;
+		int size_res = 0;
+		init(size_second, sub_res);
+		do {		
+			kernel_sub(sub_res, temp, second, size_second, size_second, &size_res);
+			res++;
+		} while (0); //sub_res > 0
+		// current division done, save result & move on to the next
+		newB[n] = res;
+		n++;
+	}
+	// all divisions done, we need to realign our result;
+	int diff = size_second - n;
+	for (int i = size_second - 1; i > n; i++) {
+		newB[i] = newB[i - diff];
+	}
+}
+
 int main(int argc, char** argv) {
 
 	BigInteger left, right;
@@ -202,7 +277,7 @@ int main(int argc, char** argv) {
 	#define NU_SIZE 3
 	char* nu = new char[NU_SIZE], * g_nu;
 	char* first = new char[SIZE_FIRST];
-	first[0] = 9; first[1] = 5;
+	first[0] = 3; first[1] = 5;
 	char* second = new char[SIZE_SECOND];
 	second[0] = 7;
 	int nuSize = NU_SIZE;
@@ -216,7 +291,8 @@ int main(int argc, char** argv) {
 	kernel_add<<<grid, block>>>(g_nu, g_first, g_second, 2, 2, &nuSize);
 	cudaMemcpy(nu, g_nu, sizeof(char) * 2, cudaMemcpyDeviceToHost);
 	*/
-	kernel_add(nu, first, second, SIZE_FIRST, SIZE_FIRST - SIZE_SECOND, &nuSize);
+	//kernel_add(nu, first, second, SIZE_FIRST, SIZE_FIRST - SIZE_SECOND, &nuSize);
+	kernel_div(nu, first, second, SIZE_FIRST, SIZE_FIRST - SIZE_SECOND, &nuSize);
 	for (int i = 0; i < SIZE_FIRST; i++) {
 		cout << (int) first[i];
 	}
