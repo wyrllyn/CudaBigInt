@@ -45,7 +45,36 @@ void BigInteger::zero() {
 	}
 }
 
-bool BigInteger::isNeg(char* bi) {
+void BigInteger::add(const BigInteger& other) {
+	
+}
+
+void BigInteger::substract(const BigInteger& other) {
+
+}
+
+void BigInteger::multiply(const BigInteger& other) {
+
+}
+
+void BigInteger::divide(const BigInteger& other) {
+
+}
+
+void BigInteger::factorial(const BigInteger& other) {
+
+}
+
+void BigInteger::greatestCommonDivisor(const BigInteger& other) {
+
+}
+
+
+///
+/// Utility functions
+///
+
+bool isNeg(char* bi) {
 	if (bi[0] == '-') {
 		return true;
 	}
@@ -109,6 +138,10 @@ int isFirstBiggerThanSecond(const char* first, const char* second, int size) {
 	}
 	return 1;
 }
+
+///
+/// Kernel functions
+///
 
 /*
 How to use this method :
@@ -358,14 +391,26 @@ int main(int argc, char** argv) {
 		cout << "Insufficient number of arguments" << endl;
 	}
 
-	BigInteger* g_left, *g_right;
-	cudaMalloc( (void**) &g_left, sizeof(BigInteger));
-	cudaMalloc( (void**) &g_right, sizeof(BigInteger));
-
-	cudaMemcpy(g_left, &left, sizeof(BigInteger), cudaMemcpyHostToDevice);
-	cudaMemcpy(g_right, &right, sizeof(BigInteger), cudaMemcpyHostToDevice);
-
-	dim3 block(1), grid(1);
+	switch (opType) {
+	case ADD:
+		left.add(right);
+		break;
+	case SUBSTRACT:
+		left.substract(right);
+		break;
+	case MULTIPLY:
+		left.multiply(right);
+		break;
+	case DIVIDE:
+		left.divide(right);
+		break;
+	case FACTORIAL:
+		left.factorial(right);
+		break;
+	case GCD:
+		left.greatestCommonDivisor(right);
+		break;
+	}
 	///
 	/// Testing block
 	///

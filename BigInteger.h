@@ -33,9 +33,9 @@ public:
 	__device__ __host__ void divide(const BigInteger& other);
 	__device__ __host__ void factorial(const BigInteger& other);
 	__device__ __host__ void greatestCommonDivisor(const BigInteger& other);
-	bool isNeg(char* bi);
 };
 
+bool isNeg(char* bi);
 __device__ __host__ int update(char* toUpdate, int value);
 __device__ __host__ void init(int size, char* toFill);
 __device__ __host__ int isFirstBiggerThanSeond(const char* first, const char* second, int size);
