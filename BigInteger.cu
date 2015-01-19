@@ -80,6 +80,11 @@ __device__ int update(char* toUpdate, int value) {
 		toUpdate[i] = toUpdate[i+dec];
 	}
 
+	if (toReturn == 0) {
+		toReturn++;
+		toUpdate[0] = 0;
+	}
+
 
 	return toReturn;
 }
@@ -224,7 +229,7 @@ void kernel_div(char* newB, const char* first, const char* second, int size_firs
 		int size_res = 0;
 		init(size_second, sub_res);
 		do {		
-			kernel_sub(sub_res, temp, second, size_second, size_second, &size_res);
+			//kernel_sub(sub_res, temp, second, size_second, size_second, &size_res);
 			res++;
 		} while (0); //sub_res > 0
 		// current division done, save result & move on to the next
@@ -236,6 +241,90 @@ void kernel_div(char* newB, const char* first, const char* second, int size_firs
 	for (int i = size_second - 1; i > n; i++) {
 		newB[i] = newB[i - diff];
 	}
+}
+
+/*__global__*/ void kernel_sub(char* newB, char* first, char* second, int size_biggest, int diff, int * size_newB) {
+
+	int tmp = 0;
+	int carry = 0;
+	(*size_newB) = size_biggest;
+	init(*size_newB, newB);
+	int index = *size_newB - 1;
+
+	for (int i = size_biggest - 1; i >= 0; i--) {
+		if (i - diff >= 0) {
+			tmp = first[i] - second[i-diff] - carry;
+			//cout << "__ " << (int) first[i] << " - " << (int) second[i - diff] << " - " << carry << " = " << tmp << endl;
+		} else {
+			tmp = first[i] - carry;
+			//cout << "__ " << (int) first[i] << " - " << carry << " = " << tmp << endl;
+		}
+
+		if (tmp < 0) {
+			// warning 10 - tmp ?
+			carry = 1;
+			tmp += 10 ;
+		}
+		else {
+			carry = 0;
+		}
+		newB[index] = tmp;
+		cout << "index : " << index << "___ " << (int) newB[index] << endl;
+		index--;
+	}
+
+	*size_newB = update(newB, *size_newB);
+	
+
+	cout << "cheking final result" << endl;
+	for (int i = 0; i < *size_newB; i++) {
+		cout << (int) newB[i];
+	}
+	cout << endl;
+}
+
+// first is the bigInt with de biggest size
+/*__global__*/ void kernel_mul(char* newB,  char* first, char* second, int size_first, int size_second, int * size_newB) {
+	(*size_newB) = size_first + size_second;
+	init(*size_newB, newB);
+	int index = 0;
+	int tmp = 0;
+	int tmp_second = 0;
+	int carry = 0;
+	int carry_second = 0;
+
+	for (int i = size_second - 1; i >= 0; i--) {
+		index = (*size_newB) - size_second + i ;
+		for (int j = size_first - 1; j >= 0 ; j--) {
+			//cout << "i = " << i << " j= " << j << " index = " << index << endl;
+			tmp = first[j] * second[i] + carry;
+			//cout << "1 tmp = " << tmp << endl;
+			carry = 0;
+			while (tmp >= 10) {
+				tmp -= 10;
+				carry++;
+			}
+		//	cout << "2 tmp = " << tmp << endl;
+		//	cout << "carry = " << carry << endl;
+
+			tmp_second = newB[index] + tmp + carry_second;
+			if (tmp_second >= 10) {
+		//		cout << " test second " << endl;
+				tmp_second = tmp_second % 10;
+				carry_second = 1;
+			}
+			newB[index] = tmp_second;
+			index --;
+			if (carry > 0 && j == 0) {
+		//		cout << "test" << endl;
+				newB[index] = carry;
+			}
+		}
+
+
+		// add values : how ??
+	}
+	
 }
 
 int main(int argc, char** argv) {
@@ -273,13 +362,13 @@ int main(int argc, char** argv) {
 	/// Testing block
 	///
 	#define SIZE_FIRST 2
-	#define SIZE_SECOND 1
-	#define NU_SIZE 3
+	#define SIZE_SECOND 2
+	#define NU_SIZE 4
 	char* nu = new char[NU_SIZE], * g_nu;
 	char* first = new char[SIZE_FIRST];
 	first[0] = 3; first[1] = 5;
 	char* second = new char[SIZE_SECOND];
-	second[0] = 7;
+	second[0] = 2; second[1] = 0; // second[2] = 2;
 	int nuSize = NU_SIZE;
 	/*
 	char* g_first, *g_second;
@@ -292,11 +381,12 @@ int main(int argc, char** argv) {
 	cudaMemcpy(nu, g_nu, sizeof(char) * 2, cudaMemcpyDeviceToHost);
 	*/
 	//kernel_add(nu, first, second, SIZE_FIRST, SIZE_FIRST - SIZE_SECOND, &nuSize);
-	kernel_div(nu, first, second, SIZE_FIRST, SIZE_FIRST - SIZE_SECOND, &nuSize);
+	//kernel_div(nu, first, second, SIZE_FIRST, SIZE_FIRST - SIZE_SECOND, &nuSize);
+	kernel_mul(nu, first, second, SIZE_FIRST, /*SIZE_FIRST -*/ SIZE_SECOND, &nuSize);
 	for (int i = 0; i < SIZE_FIRST; i++) {
 		cout << (int) first[i];
 	}
-	cout << " + ";
+	cout << " * ";
 	for (int i = 0; i < SIZE_SECOND; i++) {
 		cout << (int) second[i];
 	}
