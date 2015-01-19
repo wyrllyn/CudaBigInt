@@ -45,6 +45,14 @@ void BigInteger::zero() {
 	}
 }
 
+bool BigInteger::isNeg(char* bi) {
+	if (bi[0] == '-') {
+		return true;
+	}
+	else
+		return false;
+}
+
 void bump(char* number, int size) {
 	for (int i = 0; i < size; i++) {
 		number[i] += '0';
