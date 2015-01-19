@@ -88,6 +88,18 @@ void bump(char* number, int size) {
 	}
 }
 
+__device__ void add_minus(char* bi, int size) {
+	for (int i = size; i > 0 ; i--) {
+		bi[i] = bi[i - 1];
+	}
+	bi[0] = '-';
+}
+__device__ void remove_minus(char* bi, int size) {
+	for (int i = 0; i < size ; i++) {
+		bi[i] = bi[i+1];
+	}
+}
+
 
 
 
