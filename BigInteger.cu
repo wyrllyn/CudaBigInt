@@ -52,7 +52,7 @@ void BigInteger::setNumber(const char* nuNumber, int nuSize) {
 
 void BigInteger::zero() {
 	for (int i = 0; i < size; i++) {
-		if (number[i] == '-') continue;
+		if (number[i] == '-' || number[i] == '+') continue;
 		number[i] -= '0';
 	}
 }
