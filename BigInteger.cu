@@ -27,9 +27,11 @@ OperationType identifyOperationType(const char* op) {
 
 BigInteger::BigInteger() : number(0), size(1) {}
 
-/*BigInteger::BigInteger(const char* number, int size) : size(size) {
 
-}*/
+BigInteger::BigInteger(int size) : size(size) {
+	number = new char[size];
+	init(size, number);
+}
 
 
 void BigInteger::setNumber(const char* nuNumber, int nuSize) {
@@ -67,27 +69,65 @@ void BigInteger::print() {
 	cout << endl;
 }
 
-void BigInteger::add(const BigInteger& other) {
+/**
+ * Allocate and copy this BigInteger's number to device.
+ */
+char* BigInteger::copyNumberToDevice() const {
+	char* d_number;
+	cudaMalloc( (void**) &d_number, sizeof(char) * size);
+	cudaMemcpy(d_number, number, sizeof(char) * size, cudaMemcpyHostToDevice);
+	return d_number;
+}
+
+/**
+ * TODO
+ */
+void BigInteger::copyNumberFromDevice(char* d_number) {
+	cudaMemcpy(number, d_number, sizeof(char) * size, cudaMemcpyDeviceToHost);
+}
+
+BigInteger BigInteger::add(const BigInteger& other) {
+	char* d_number = copyNumberToDevice();
+	char* d_other_number = other.copyNumberToDevice();
+
+	int size_b = size;
+	if (other.size > size)
+		size_b = other.size;
 	
+	BigInteger result(size_b + 1);
+	char* d_newB = result.copyNumberToDevice();
+	
+
+cout << "size_b = " << size_b << endl;
+	dim3 grid(1), block(size_b + 1);
+	
+	if (other.size > size) {
+		kernel_add<<<grid, block>>>(d_newB, d_other_number, d_number, other.size, other.size - size, &size_b);
+	} else {
+		kernel_add<<<grid, block>>>(d_newB, d_number, d_other_number, size, size - other.size, &size_b);
+	}
+
+	result.copyNumberFromDevice(d_newB);
+	return result;
 }
 
-void BigInteger::substract(const BigInteger& other) {
+BigInteger BigInteger::substract(const BigInteger& other) {
 
 }
 
-void BigInteger::multiply(const BigInteger& other) {
+BigInteger BigInteger::multiply(const BigInteger& other) {
 
 }
 
-void BigInteger::divide(const BigInteger& other) {
+BigInteger BigInteger::divide(const BigInteger& other) {
 
 }
 
-void BigInteger::factorial(const BigInteger& other) {
+BigInteger BigInteger::factorial(const BigInteger& other) {
 
 }
 
-void BigInteger::greatestCommonDivisor(const BigInteger& other) {
+BigInteger BigInteger::greatestCommonDivisor(const BigInteger& other) {
 
 }
 

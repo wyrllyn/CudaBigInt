@@ -31,34 +31,31 @@ int main(int argc, char** argv) {
 	} else {
 		cout << "Insufficient number of arguments" << endl;
 	}
-	cout << "Here is what we have:" << endl;
-	left.print();
-	cout << argv[1] << endl;
-	right.print();
 
 	cudaEvent_t start, stop;
 	cudaEventCreate(&start);
 	cudaEventCreate(&stop);
 	cudaEventRecord(start, 0);
 
+	BigInteger result;
 	switch (opType) {
 	case ADD:
-		left.add(right);
+		result = left.add(right);
 		break;
 	case SUBSTRACT:
-		left.substract(right);
+		result = left.substract(right);
 		break;
 	case MULTIPLY:
-		left.multiply(right);
+		result = left.multiply(right);
 		break;
 	case DIVIDE:
-		left.divide(right);
+		result = left.divide(right);
 		break;
 	case FACTORIAL:
-		left.factorial(right);
+		result = left.factorial(right);
 		break;
 	case GCD:
-		left.greatestCommonDivisor(right);
+		result = left.greatestCommonDivisor(right);
 		break;
 	default:
 		cout << "Reaching default case." << endl;
@@ -70,6 +67,7 @@ int main(int argc, char** argv) {
 	float elapsed_time;
 	cudaEventElapsedTime(&elapsed_time, start, stop);
 	cout << "time: " << elapsed_time << " ms" << endl;
+	result.print();
 
 	///
 	/// Testing block

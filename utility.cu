@@ -17,7 +17,7 @@ void bump(char* number, int size) {
 
 //init 
 // size = size_biggest + diff +1 (addition case)
-__device__ void init(int size, char* toFill) {
+void init(int size, char* toFill) {
 	for (int i = 0; i < size; i++) {
 		toFill[i] = 0;
 	}
@@ -62,3 +62,5 @@ int isFirstBiggerThanSecond(const char* first, const char* second, int size) {
 	}
 	return 1;
 }
+
+

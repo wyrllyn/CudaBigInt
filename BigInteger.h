@@ -23,20 +23,22 @@ private:
 	int size;
 
 public:
-	__device__ __host__ BigInteger();
-	//__device__ __host__ BigInteger(const char* number, int size);
+	BigInteger();
+	BigInteger(int size);
 
-	__host__ void setNumber(const char* nuNumber, int nuSize);
+	void setNumber(const char* nuNumber, int nuSize);
 	/// convert '0' to 0
 	void zero();
 	void print();
+	char* copyNumberToDevice() const;
+	void copyNumberFromDevice(char* d_number);//TODO (signature may change)
 
-	__device__ __host__ void add(const BigInteger& other);
-	__device__ __host__ void substract(const BigInteger& other);
-	__device__ __host__ void multiply(const BigInteger& other);
-	__device__ __host__ void divide(const BigInteger& other);
-	__device__ __host__ void factorial(const BigInteger& other);
-	__device__ __host__ void greatestCommonDivisor(const BigInteger& other);
+	BigInteger add(const BigInteger& other);
+	BigInteger substract(const BigInteger& other);
+	BigInteger multiply(const BigInteger& other);
+	BigInteger divide(const BigInteger& other);
+	BigInteger factorial(const BigInteger& other);
+	BigInteger greatestCommonDivisor(const BigInteger& other);
 };
 
 
