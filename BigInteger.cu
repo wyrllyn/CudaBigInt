@@ -64,7 +64,7 @@ void BigInteger::zero() {
 void BigInteger::print() {
 	cout << number[0];
 	for (int i = 1; i < size; i++) {
-		cout << (int) number[i];
+		cout << (int) number[i] << "`";
 	}
 	cout << endl;
 }
@@ -79,12 +79,33 @@ char* BigInteger::copyNumberToDevice() const {
 	return d_number;
 }
 
-/**
- * TODO
- */
+
 void BigInteger::copyNumberFromDevice(char* d_number) {
 	cudaMemcpy(number, d_number, sizeof(char) * size, cudaMemcpyDeviceToHost);
 }
+
+
+void BigInteger::applyAddCarry() {
+	for (int i = size - 1; i >= 0; i--) {
+		if (number[i] > 9) {
+			number[i] -= 10;
+			number[i - 1]++;
+		}
+	}
+}
+
+void BigInteger::applySubCarry() {
+	for (int i = size - 1; i >= 0; i--) {
+		if (number[i] < 0) {
+			number[i] += 10;
+			number[i - 1]--;
+		}
+	}
+}
+
+///
+/// Operations
+///
 
 BigInteger BigInteger::add(const BigInteger& other) {
 	char* d_number = copyNumberToDevice();
@@ -97,8 +118,6 @@ BigInteger BigInteger::add(const BigInteger& other) {
 	BigInteger result(size_b + 1);
 	char* d_newB = result.copyNumberToDevice();
 	
-
-cout << "size_b = " << size_b << endl;
 	dim3 grid(1), block(size_b + 1);
 	
 	if (other.size > size) {
@@ -108,11 +127,28 @@ cout << "size_b = " << size_b << endl;
 	}
 
 	result.copyNumberFromDevice(d_newB);
+	result.applyAddCarry();
 	return result;
 }
 
 BigInteger BigInteger::substract(const BigInteger& other) {
+	char* d_number = copyNumberToDevice();
+	char* d_other_number = other.copyNumberToDevice();
 
+	int size_b = size;
+	if (other.size > size)
+		size_b = other.size;
+	
+	BigInteger result(size_b + 1);
+	char* d_newB = result.copyNumberToDevice();
+	
+	dim3 grid(1), block(size_b + 1);
+
+	kernel_sub<<<grid, block>>>(d_newB, d_number, d_other_number, size, size - other.size, &size_b);
+
+	result.copyNumberFromDevice(d_newB);
+	result.applySubCarry();
+	return result;
 }
 
 BigInteger BigInteger::multiply(const BigInteger& other) {

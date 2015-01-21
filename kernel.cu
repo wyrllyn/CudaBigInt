@@ -58,48 +58,33 @@ __global__ void kernel_add(char* newB, char* first, char* second, int size_bigge
 	//}
 }
 
-/// cpu function
-/*__global__ void kernel_add(char* newB, char* first, char* second, int size_biggest, int diff, int * size_newB) {
+
+__global__ void kernel_sub(char* newB, char* first, char* second, int size_biggest, int diff, int * size_newB) {
 	int tmp = 0;
-	int carry = 0;
-	(*size_newB) = size_biggest + 1;
-	init(*size_newB, newB);
-	int index = *size_newB - 1;
-	int i = BlockIdx.x;
+	int i = threadIdx.x;
+#if __CUDA_ARCH__>=200
+	printf("#threadIdx.x = %d\n", threadIdx.x);
+#endif
+	if (i == 0) return;
 
-	for (int i = size_biggest - 1; i >= 0; i--) {
-		if (i - diff >= 0 && (second[i] != '+' && second[i] != '-')) {
-			tmp = second[i - diff] + first[i] + carry;
-			cout << "__ " << (int) first[i] << " + " << (int) second[i - diff] << " + " << carry << " = " << tmp << endl;
-		} else if (first[i] != '+' && first[i] != '-') {
-			tmp = first[i] + carry;
-			cout << "__ " << (int) first[i] << " + " << carry << " = " << tmp << endl;
-		}
-
-		if (tmp >= 10) {
-			carry = 1;
-			tmp = tmp % 10;
-		}
-		else {
-			carry = 0;
-		}
-		newB[index] = tmp;
-		cout << index << "___ " << (int) newB[index] << endl;
-		index--;
+	//for (int i = size_biggest - 1; i >= 0; i--) {
+	if (i - 1 - diff >= 0 && (second[i - 1 - diff] != '+' && second[i - 1 - diff] != '-')) {
+		tmp = first[i - 1] - second[i-1-diff];
+	} else if (first[i - 1] != '+' && first[i - 1] != '-') {
+		tmp = first[i - 1];
 	}
 
-	if (carry != 0) {
-		newB[index] = carry;
-		cout << index << "### " << (int) newB[index] << endl;
+	if (tmp < 0) {
+		// warning 10 - tmp ?
+		newB[i - 1]--;
+		tmp += 10 ;
 	}
+	if (i != 0)
+		newB[i] += tmp;
+	//}
+}
 
-	cout << "cheking final result" << endl;
-	for (int i = 0; i < *size_newB; i++) {
-		cout << (int) newB[i];
-	}
-	cout << endl;
 
-}*/
 
 /**
  * first is divided by second.
@@ -163,45 +148,7 @@ void kernel_div(char* newB, const char* first, const char* second, int size_firs
 	}
 }
 
-/*__global__*/ void kernel_sub(char* newB, char* first, char* second, int size_biggest, int diff, int * size_newB) {
 
-	int tmp = 0;
-	int carry = 0;
-	(*size_newB) = size_biggest;
-	init(*size_newB, newB);
-	int index = *size_newB - 1;
-
-	for (int i = size_biggest - 1; i >= 0; i--) {
-		if (i - diff >= 0) {
-			tmp = first[i] - second[i-diff] - carry;
-			//cout << "__ " << (int) first[i] << " - " << (int) second[i - diff] << " - " << carry << " = " << tmp << endl;
-		} else {
-			tmp = first[i] - carry;
-			//cout << "__ " << (int) first[i] << " - " << carry << " = " << tmp << endl;
-		}
-
-		if (tmp < 0) {
-			// warning 10 - tmp ?
-			carry = 1;
-			tmp += 10 ;
-		}
-		else {
-			carry = 0;
-		}
-		newB[index] = tmp;
-		cout << "index : " << index << "___ " << (int) newB[index] << endl;
-		index--;
-	}
-
-	*size_newB = update(newB, *size_newB);
-	
-
-	cout << "cheking final result" << endl;
-	for (int i = 0; i < *size_newB; i++) {
-		cout << (int) newB[i];
-	}
-	cout << endl;
-}
 
 // first is the bigInt with de biggest size
 /*__global__*/ void kernel_mul(char* newB,  char* first, char* second, int size_first, int size_second, int * size_newB) {

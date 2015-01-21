@@ -31,7 +31,10 @@ public:
 	void zero();
 	void print();
 	char* copyNumberToDevice() const;
-	void copyNumberFromDevice(char* d_number);//TODO (signature may change)
+	void copyNumberFromDevice(char* d_number);
+
+	void applyAddCarry();
+	void applySubCarry();
 
 	BigInteger add(const BigInteger& other);
 	BigInteger substract(const BigInteger& other);
