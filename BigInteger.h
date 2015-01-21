@@ -37,12 +37,6 @@ public:
 };
 
 
-bool isNeg(char* bi);
-__device__ __host__ int update(char* toUpdate, int value);
-__device__ __host__ void init(int size, char* toFill);
-__device__ __host__ int isFirstBiggerThanSecond(const char* first, const char* second, int size);
-
-
 /*__global__*/ void kernel_add(char* newB, char* first, char* second, int size_first, int size_second, int * size_newB);
 /*__global__ */void kernel_sub(char* newB, const char* first, const char* second, int size_biggest, int diff, int * size_newB);
 /*__global__*/ void kernel_mul(char* newB, const char* first, const char* second, int size_first, int size_second, int * size_newB);
