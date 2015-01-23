@@ -35,6 +35,7 @@ public:
 
 	void applyAddCarry();
 	void applySubCarry();
+	void applyMulCarry();
 
 	BigInteger add(const BigInteger& other);
 	BigInteger substract(const BigInteger& other);

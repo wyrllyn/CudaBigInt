@@ -84,6 +84,9 @@ void BigInteger::copyNumberFromDevice(char* d_number) {
 	cudaMemcpy(number, d_number, sizeof(char) * size, cudaMemcpyDeviceToHost);
 }
 
+///
+/// Carry the things
+///
 
 void BigInteger::applyAddCarry() {
 	for (int i = size - 1; i >= 0; i--) {
@@ -101,6 +104,15 @@ void BigInteger::applySubCarry() {
 			number[i - 1]--;
 		}
 	}
+}
+
+void BigInteger::applyMulCarry() {
+	/*for (int i = size - 1; i >= 0; i--) {
+		if (number[i] > 9) {
+			number[i] -= 10;
+			number[i - 1]++;
+		}
+	}*/
 }
 
 ///
@@ -152,7 +164,20 @@ BigInteger BigInteger::substract(const BigInteger& other) {
 }
 
 BigInteger BigInteger::multiply(const BigInteger& other) {
+	char* d_number = copyNumberToDevice();
+	char* d_other_number = other.copyNumberToDevice();
+	int size_newB = size + other.size;
 
+	BigInteger result(size_newB);
+	char* d_newB = result.copyNumberToDevice();
+	
+	dim3 grid(1), block(size, other.size);
+
+	kernel_mul<<<grid, block>>>(d_newB, d_number, d_other_number, size, other.size, &size_newB);
+
+	result.copyNumberFromDevice(d_newB);
+	//result.applyMulCarry();
+	return result;
 }
 
 BigInteger BigInteger::divide(const BigInteger& other) {
