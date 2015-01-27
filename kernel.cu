@@ -86,9 +86,9 @@ __global__ void kernel_sub(char* newB, char* first, char* second, int size_bigge
 
 // first is the bigInt with de biggest size
 __global__ void kernel_mul(char* newB,  char* first, char* second, int size_first, int size_second, int * size_newB) {
-#if __CUDA_ARCH__>=200
+/*#if __CUDA_ARCH__>=200
 printf("une connerie%d\n", threadIdx.x);
-#endif
+#endif*/
 
 	int index = 0;
 	int tmp = 0;
@@ -98,34 +98,51 @@ printf("une connerie%d\n", threadIdx.x);
 	int i = threadIdx.x;
 	int j = threadIdx.y;
 
+	index = (j-1) + (i-1) + 2 ;
+	/* Exemple: 12*12 
+		-> newB[2]= 1*1    
+		-> newB[3]=(1*2)+(2*1) -> ne marche pas ici car les threads écrivent en même temps dans la même variable
+		-> newB[4]=2*2
+
+	 Solution au problème de retenue + propagation :
+	 	-> au lieu de char* newB utiliser un char** newB où l'on mettrait les valeurs dans newB[index][tid] (calcul tid G1DB2D)
+	 	puis on utilise une fonction hors du kernel pour ajouter tous les newB[index][i] à newB[index][0] ou un autre char*
+	 	mais du coup la gestion de la retenue n'est pas parallélisée 
+	*/
+
+
+
 	//for (int i = size_second - 1; i >= 0; i--) {
 	//index = (*size_newB) - size_second + i + (j - size_first);
-#if __CUDA_ARCH__>=200
+/*#if __CUDA_ARCH__>=200
 	printf("#threadIdx.x (i) = %d\n", threadIdx.x);
 	printf("#threadIdx.y (j) = %d\n", threadIdx.y);
 	printf("#index = %d\n", index);
-#endif
+#endif*/
 		//for (int j = size_first - 1; j >= 0 ; j--) {
-	tmp = first[j] * second[i] + carry;
-	while (tmp >= 10) {
-		tmp -= 10;
-		carry++;
+	if(j!=0 && i!=0){
+		tmp = first[i] * second[j] + carry;
+		while (tmp >= 10) {
+			tmp -= 10;
+			carry++;
+		}
+		newB[index - 1] += carry;
+
+		tmp_second = newB[index] + tmp;
+		if (tmp_second >= 10) {
+			tmp_second = tmp_second % 10;
+			carry_second = 1;
+		}
+		newB[index - 1] += carry_second;
+		newB[index] += tmp_second;
 	}
-	newB[index - 1] += carry;
 
-	tmp_second = newB[index] + tmp;
-	if (tmp_second >= 10) {
-		tmp_second = tmp_second % 10;
-		carry_second = 1;
+	if(j==0 && i==0){
+		if(first[j]=='-' || second[i]=='-')
+			newB[0]='-';
+		else
+			newB[0]='+';
 	}
-	newB[index - 1] += carry_second;
-
-	newB[index] = tmp_second;
-		//}
-
-
-		// add values : how ??
-	//}
 }
 
 
