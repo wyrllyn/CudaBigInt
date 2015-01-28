@@ -12,7 +12,7 @@ OperationType identifyOperationType(const char* op) {
 		return ADD;
 	} else if (op[0] == '-') {
 		return SUBSTRACT;
-	} else if (op[0] == 'x') {
+	} else if (op[0] == '*') {
 		return MULTIPLY;
 	} else if (op[0] == '/') {
 		return DIVIDE;
@@ -79,7 +79,6 @@ char* BigInteger::copyNumberToDevice() const {
 	return d_number;
 }
 
-
 void BigInteger::copyNumberFromDevice(char* d_number) {
 	cudaMemcpy(number, d_number, sizeof(char) * size, cudaMemcpyDeviceToHost);
 }
@@ -106,13 +105,37 @@ void BigInteger::applySubCarry() {
 	}
 }
 
-void BigInteger::applyMulCarry() {
-	/*for (int i = size - 1; i >= 0; i--) {
-		if (number[i] > 9) {
-			number[i] -= 10;
-			number[i - 1]++;
+BigInteger BigInteger::applyMulCarry(int size_result, int size_first, int size_second) {
+	int inc = 1;
+	int i, n;
+	char * tmp_result;
+	BigInteger result(size_result);
+	
+	tmp_result = new char(size_result);
+
+	for(i=0; i<size_result; i++)
+		tmp_result[i] = 0;
+	
+	
+	// i pour result, et n pour number
+	for (i = size_result - 1, n = size_first*size_second-1; n > size_first; i--, n--) {
+		if (n % size_first != 0) {
+			tmp_result[i] += number[n];
+			while (tmp_result[i]>9){
+				tmp_result[i] -= 10;
+				tmp_result[i-1]++;
+			}
 		}
-	}*/
+		if(n % size_first == 0){
+			i = size_result - inc;
+			inc ++;
+		}
+	}
+	// Signe du résultat
+	tmp_result[0] = number[0];
+	
+	result.setNumber(tmp_result, size_result);
+	return result;
 }
 
 ///
@@ -137,6 +160,8 @@ BigInteger BigInteger::add(const BigInteger& other) {
 	} else {
 		kernel_add<<<grid, block>>>(d_newB, d_number, d_other_number, size, size - other.size, &size_b);
 	}
+	cudaFree(d_number);
+	cudaFree(d_other_number);
 
 	result.copyNumberFromDevice(d_newB);
 	result.applyAddCarry();
@@ -166,17 +191,25 @@ BigInteger BigInteger::substract(const BigInteger& other) {
 BigInteger BigInteger::multiply(const BigInteger& other) {
 	char* d_number = copyNumberToDevice();
 	char* d_other_number = other.copyNumberToDevice();
-	int size_newB = size + other.size -1;
-
-	BigInteger result(size_newB);
-	char* d_newB = result.copyNumberToDevice();
+	int size_newBbegin = size * other.size;
+	
+	BigInteger resultbegin(size_newBbegin);
+	
+	char* d_newB = resultbegin.copyNumberToDevice();
 	
 	dim3 grid(1), block(size, other.size);
 
-	kernel_mul<<<grid, block>>>(d_newB, d_number, d_other_number, size, other.size, &size_newB);
+	kernel_mul<<<grid, block>>>(d_newB, d_number, d_other_number, size, other.size, &size_newBbegin);
 
-	result.copyNumberFromDevice(d_newB);
-	//result.applyMulCarry();
+	resultbegin.copyNumberFromDevice(d_newB);
+
+	cudaFree(d_number);
+	cudaFree(d_other_number);
+	cudaFree(d_newB);
+
+	int size_newB = size + other.size -1;
+	BigInteger result(size_newB);
+	result = resultbegin.applyMulCarry(size_newB, size, other.size);
 	return result;
 }
 

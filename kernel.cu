@@ -84,45 +84,16 @@ __global__ void kernel_sub(char* newB, char* first, char* second, int size_bigge
 	//}
 }
 
-// first is the bigInt with de biggest size
+// first is the bigInt with the biggest size
 __global__ void kernel_mul(char* newB,  char* first, char* second, int size_first, int size_second, int * size_newB) {
-/*#if __CUDA_ARCH__>=200
-printf("une connerie%d\n", threadIdx.x);
-#endif*/
 
-	int index = 0;
-	int tmp = 0;
-	int tmp_second = 0;
-	int carry = 0;
-	int carry_second = 0;
 	int i = threadIdx.x;
 	int j = threadIdx.y;
 
-	index = (j-1) + (i-1) + 2 ;
+	int tid = j * gridDim.x * blockDim.x + i ;
 
-	//for (int i = size_second - 1; i >= 0; i--) {
-	//index = (*size_newB) - size_second + i + (j - size_first);
-#if __CUDA_ARCH__>=200
-	//printf("#threadIdx.x (i) = %d\n", threadIdx.x);
-	//printf("#threadIdx.y (j) = %d\n", threadIdx.y);
-	//printf("#index = %d\n", index);
-#endif
-		//for (int j = size_first - 1; j >= 0 ; j--) {
 	if(j!=0 && i!=0){
-		tmp = first[i] * second[j] + carry;
-		while (tmp >= 10) {
-			tmp -= 10;
-			carry++;
-		}
-		newB[index - 1] += carry;
-
-		tmp_second = newB[index] + tmp;
-		if (tmp_second >= 10) {
-			tmp_second = tmp_second % 10;
-			carry_second = 1;
-		}
-		newB[index - 1] += carry_second;
-		newB[index] += tmp_second;
+		newB[tid] = first[i] * second[j];
 	}
 
 	if(j==0 && i==0){
@@ -131,57 +102,7 @@ printf("une connerie%d\n", threadIdx.x);
 		else
 			newB[0]='+';
 	}
-		//}
-
-
-		// add values : how ??
-	//}
 }
-
-
-
-// first is the bigInt with de biggest size
-/*__global__*/ /*void kernel_mul(char* newB,  char* first, char* second, int size_first, int size_second, int * size_newB) {
-	(*size_newB) = size_first + size_second;
-	init(*size_newB, newB);
-	int index = 0;
-	int tmp = 0;
-	int tmp_second = 0;
-	int carry = 0;
-	int carry_second = 0;
-
-	for (int i = size_second - 1; i >= 0; i--) {
-		index = (*size_newB) - size_second + i ;
-		for (int j = size_first - 1; j >= 0 ; j--) {
-			//cout << "i = " << i << " j= " << j << " index = " << index << endl;
-			tmp = first[j] * second[i] + carry;
-			//cout << "1 tmp = " << tmp << endl;
-			carry = 0;
-			while (tmp >= 10) {
-				tmp -= 10;
-				carry++;
-			}
-		//	cout << "2 tmp = " << tmp << endl;
-		//	cout << "carry = " << carry << endl;
-
-			tmp_second = newB[index] + tmp + carry_second;
-			if (tmp_second >= 10) {
-		//		cout << " test second " << endl;
-				tmp_second = tmp_second % 10;
-				carry_second = 1;
-			}
-			newB[index] = tmp_second;
-			index --;
-			if (carry > 0 && j == 0) {
-		//		cout << "test" << endl;
-				newB[index] = carry;
-			}
-		}
-
-
-		// add values : how ??
-	}
-}*/
 
 
 
