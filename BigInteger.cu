@@ -497,52 +497,69 @@ BigInteger BigInteger::greatestCommonDivisor(const BigInteger& other) {
 	if (other.size > size)
 		size_b = other.size;
 	
+	BigInteger tmp(size);
 	BigInteger sub(size_b + 1);
 	char* d_newB = sub.copyNumberToDevice();
 
 	first_tmp.copyNumberFromDevice(d_number);
 	second_tmp.copyNumberFromDevice(d_other_number);
 
+	// Tant que le pgcd n'est pas trouvé on continue
 	while(!trouve){
 		nul = true;
+		
 		dim3 grid(1), block(size_b + 1);
-
-		kernel_sub<<<grid, block>>>(d_newB, d_number, d_other_number, size, size - other.size, &size_b);
+		kernel_sub<<<grid, block>>>(d_newB, d_number, d_other_number, first_tmp.size, first_tmp.size - second_tmp.size, &size_b);
 
 		sub.copyNumberFromDevice(d_newB);
 		sub.applySubCarry();
 
-		cout << "First: ";
-		first_tmp.print();
-		cout << " Second: ";
-		second_tmp.print();
-		cout << " Sub: ";
-		sub.print();
-		cout << endl;
-
+		// Si la soustraction ne fait pas zéro on met nul à false
 		for(i=1; i<size_b+1; i++){
-			cout << "Sub[i]: " << (int)sub.number[i] << endl;
 			if(sub.number[i]!=0)
 				nul = false;
 		}
 
-		if(sub.number[0]=='-'){
-			first_tmp.copyNumberFromDevice(d_other_number);
-			second_tmp.copyNumberFromDevice(d_newB);
-			d_number = first_tmp.copyNumberToDevice();
-			d_other_number = second_tmp.copyNumberToDevice();
-			
-		}
-		else if(nul){
+		// Si c'est nul on renvoie le pgcd
+		if(nul || first_tmp.number[0]=='-'){
 			trouve = true;
-			second_tmp.copyNumberFromDevice(d_other_number);
+			//second_tmp.copyNumberFromDevice(d_other_number);
 			return second_tmp;
 		}
+		// Si c'est positif
 		else{
-			first_tmp.copyNumberFromDevice(d_newB);
+			// first = sub
+			for(i=sub.size-1; i>0; i--){
+				first_tmp.number[i] = sub.number[i];
+			}
+			first_tmp.number[0] = '+';
+			first_tmp.size = sub.size;
+			first_tmp.resize();
+			second_tmp.resize();
+			// Si second > first on les inverse
+			if (!isFirstBiggerThanSecond_2(first_tmp.number, second_tmp.number, first_tmp.size, second_tmp.size)){
+				for(i=first_tmp.size-1; i>-1; i--){
+					tmp.number[i] = first_tmp.number[i];
+				}
+				tmp.size = first_tmp.size;
+				for(i=second_tmp.size-1; i>-1; i--){
+					first_tmp.number[i] = second_tmp.number[i];
+				}
+				first_tmp.size = second_tmp.size;
+				for(i=tmp.size-1; i>-1; i--){
+					second_tmp.number[i] = tmp.number[i];
+				}
+				second_tmp.size = tmp.size;
+			}
 			d_number = first_tmp.copyNumberToDevice();
+			d_other_number = second_tmp.copyNumberToDevice();
+			// On remet sub à 0
+			for(i=0; i<sub.size; i++)
+				sub.number[i] = 0;
+			d_newB = sub.copyNumberToDevice();
+			size_b = first_tmp.size;
+			sub.size = size_b+1;
 		}
-
 	}
 }
 
