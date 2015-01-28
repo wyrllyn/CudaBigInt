@@ -384,7 +384,7 @@ BigInteger BigInteger::multiply(const BigInteger& other) {
 
 BigInteger BigInteger::divide(const BigInteger& other) {
 	if (other.size > size) {
-		return BigInteger(0);
+		return BigInteger(2);
 	}
 
 	BigInteger result(size);
