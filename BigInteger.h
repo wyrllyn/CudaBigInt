@@ -25,6 +25,7 @@ private:
 public:
 	BigInteger();
 	BigInteger(int size);
+	~BigInteger();
 
 	void setNumber(const char* nuNumber, int nuSize);
 	/// convert '0' to 0
@@ -34,6 +35,7 @@ public:
 	void copyNumberFromDevice(char* d_number);
 	/// reinitialize number array
 	void reset();
+	void resize();
 
 	void applyAddCarry();
 	void applySubCarry();
