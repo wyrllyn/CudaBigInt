@@ -1,7 +1,7 @@
 #ifndef BIGINTEGER_H
 #define BIGINTEGER_H
 
-
+#include <vector>
 #include "kernel.h"
 
 enum OperationType {
@@ -29,11 +29,16 @@ public:
 	void setNumber(const char* nuNumber, int nuSize);
 	/// convert '0' to 0
 	void zero();
-	void print();
+	void print() const;
 	char* copyNumberToDevice() const;
 	void copyNumberFromDevice(char* d_number);
 	/// reinitialize number array
 	void reset();
+	void shiftRight(int offset = 1);
+	/// aligns this BigInteger on the left & store its size
+	void alignLeft(int* size);
+	void stuffVector(std::vector<char> vect);
+	void shrink(int nuSize);
 
 	void applyAddCarry();
 	void applySubCarry();

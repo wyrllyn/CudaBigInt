@@ -62,7 +62,7 @@ void BigInteger::zero() {
 	}
 }
 
-void BigInteger::print() {
+void BigInteger::print() const {
 	cout << number[0];
 	cout.flush();
 	for (int i = 1; i < size; i++) {
@@ -74,6 +74,55 @@ void BigInteger::print() {
 void BigInteger::reset() {
 	init(size, number);
 	number[0] = '+';
+}
+
+void BigInteger::shiftRight(int offset) {
+	for (int i = size - 1; i > offset; i--) {
+		number[i] = number[i - offset];
+	}
+	for (int i = 1; i <= offset; i++) {
+		number[i] = 0;
+	}
+}
+
+void BigInteger::alignLeft(int* nuSize) {
+	for (int i = 1; i < size; i++) {
+		if (number[i] != 0) {
+			//cout << "align: " << i << endl;
+			//cout << "nuSize: " << (size - i) << endl;
+			*nuSize = size - i;
+			break;
+		}
+	}
+	int i = 1;
+	for (int j = size - *nuSize; j < size; j++) {
+		//cout << "i=" << i << ";j=" << j << endl;
+		//cout << "    =" << (int)number[j] << endl;
+		number[i] = number[j];
+		i++;
+	}
+	for (int i = *nuSize + 1; i < size; i++) {
+		number[i] = 0;
+		//cout << "i=" << i << endl;
+		//cout << " =" << (int)number[i] << endl;
+	}
+}
+
+void BigInteger::stuffVector(vector<char> vect) {
+	for (int i = size - 1; i > 0; i--) {
+		number[i] = vect.back();
+		vect.pop_back();
+	}
+}
+
+void BigInteger::shrink(int nuSize) {
+	size = nuSize + 1;
+	char* nuNumber = new char[size];
+	for (int i = 0; i < size; i++) {
+		nuNumber[i] = number[i];
+	}
+	delete number;
+	number = nuNumber;
 }
 
 /**
@@ -222,98 +271,79 @@ BigInteger BigInteger::multiply(const BigInteger& other) {
 }
 
 BigInteger BigInteger::divide(const BigInteger& other) {
-	char* d_number = copyNumberToDevice();
-	char* d_other_number = other.copyNumberToDevice();
-	int size_newB = size;
 	if (other.size > size) {
 		return BigInteger(0);
 	}
 
-	BigInteger result(size_newB);
+	BigInteger result(size);
 	if(number[0]=='-' || other.number[0]=='-')
 		result.number[0]='-';
 	else
 		result.number[0]='+';
 
-	dim3 grid(1), block();
-
-	//char* temp = new char[other.size + 1];
-	//init(other.size + 1, temp);
-	int t = 0; // temp's index
-	int n = 0; // newB's index
-	for (int i = size - 1; i > 0; i -= t) {
-		t = 0;
-		BigInteger temp(other.size + 1);
-		cout << "loop#" << i << endl;
-		for (int j = i - other.size - 1; j <= i; j++) {
-			if (j > 0) {
-				temp.number[1 + t] = number[j];
-				t++;
-				if (!isFirstBiggerThanSecond(other.number, temp.number, other.size)) {
+	int dividend_index = 1;
+	vector<char> result_vector;
+	BigInteger temp(other.size + 1);
+	int rest_size = 0;
+	int it_count = 0;
+	do {
+		it_count++;
+		cout << "___Iteration #" << it_count << endl;
+		cout << "beginning phase 1" << endl;
+		int temp_index = rest_size + 1;
+		for (int i = dividend_index; i < size; i++) {
+			temp.number[temp_index] = number[i];
+			temp_index++;
+			dividend_index++;
+			if (temp_index < other.size) {
+				//still not big enough for the divisor
+				continue;
+			} else if (temp_index == other.size) {
+				if (isFirstBiggerThanSecond(other.number, temp.number, other.size)) {
+					// still too small, get one extra
+					//TODO: handle potential "overflow"
+					temp.number[temp_index] = number[i + 1];
+					temp_index++;
+					dividend_index++;
+					break;
+				} else {
+					// temp is bigger than the divisor, go to next phase
+					//cout << "shift right before"; temp.print();
+					temp.shiftRight();
+					//cout << "shift right after"; temp.print();
 					break;
 				}
 			}
 		}
-		cout<<"first phase done"<<endl;
-		temp.print();
-		// verify that we are not attempting to divide something too small
-		bool stopDividing = false;
-		if (isFirstBiggerThanSecond(other.number, temp.number, other.size)) {
-			cout << "expanding our horizons"<<endl;
-			for (int j = t + 1; j < other.size; j++) {
-				temp.number[1 + t] = number[j];
-				t++;
-				if (!isFirstBiggerThanSecond(other.number, temp.number, other.size)) {
-					break;
-				}
-			}
-			// we went through the entire number & it's still not enough, that means we're done
-			if (!isFirstBiggerThanSecond(other.number, temp.number, other.size)) {
-				stopDividing = true; // not breaking right here 'cause we've got a print below
-			}
-		} else {
-			// if everything is cool, shift right
-			cout<<"shifting right "<<temp.size<<endl;
-			for (int k = temp.size - 1; k > 1; k--) {
-				cout<<"k="<<k<<endl;
-				temp.number[k] = temp.number[k - 1];
-			}
-			temp.number[1] = 0;
-		}
-		temp.print();
-		if (stopDividing) break;
-		// now that we have our thing, let's get to the division itself
-		char res = 0;
-		//char* sub_res = new char[size_second];
+		cout << "end of phase 1, with temp: ";temp.print();
+		cout << "dividend_index is at " << dividend_index << "(=" << (int)number[dividend_index] << ")" << endl;
+		cout << "temp_index is at " << temp_index << endl;
+		cout << "beginning phase 2" << endl;
 		BigInteger sub_res(other.size);
-		//init(size_second, sub_res);
-		do {		
-			//kernel_sub(sub_res, temp, second, size_second, size_second, &size_res);
+		char res = 0;
+		do {
 			sub_res = temp.substract(other);
 			if (sub_res.number[0] == '+') {
+				temp = sub_res;
 				res++;
 			}
-			temp = sub_res;
-		} while (sub_res.number[0] == '+'); //sub_res > 0
-		// current division done, save result & move on to the next
-		n++;
-		result.number[n] = res;
-		cout <<"just checkin: i="<<i<<";t="<<t<<";n="<<n<<";res="<<(int)res<<endl;
-	}
-	// all divisions done, we need to realign our result;
-	int diff = other.size - n + 1;
-	cout<<"diff="<<diff<<endl;
-	cout<<"size-1="<<(size - 1)<<endl;
-	result.print();
-	for (int i = size - 1; i > 0; i--) {
-		if (i > n && (i - diff) > 0) {
-			cout<<"##"<<i<<"="<<(int)result.number[i - diff]<<endl;
-			result.number[i] = result.number[i - diff];
-		} else {
-			result.number[i] = 0;
-		}
-	}
+		} while (sub_res.number[0] == '+');
+		cout << "end of phase 2, with res=" << (int)res << " and temp:"; temp.print();
+		cout << "beginning of phase 3" << endl;
+		result_vector.push_back(res);
+		temp.alignLeft(&rest_size);
+		temp.shrink(rest_size + 1);
+		cout << "end of phase 3, with rest_size=" << rest_size << " and temp:"; temp.print();
+		cout << "loop condition: " << dividend_index << " < " << size  << " : " << (dividend_index <= size) << endl;
+		cout << "___end of iteration #" << it_count << endl;
+	} while (dividend_index < size);
 
+	// stuff vector into result
+	cout << "result_vector contents: ";
+	for (int c = 0; c < result_vector.size(); c++) cout << (int) result_vector[c] << " ";
+	cout << endl;
+	result.stuffVector(result_vector);
+	cout << "Final result:"; result.print();
 	return result;
 }
 

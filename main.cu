@@ -38,6 +38,7 @@ int main(int argc, char** argv) {
 	cudaEventRecord(start, 0);
 
 	BigInteger result;
+	int r;
 	switch (opType) {
 	case ADD:
 		result = left.add(right);
@@ -49,7 +50,13 @@ int main(int argc, char** argv) {
 		result = left.multiply(right);
 		break;
 	case DIVIDE:
-		result = left.divide(right);
+		r = atoi(argv[3]);
+		if (r == 0) {
+			cout << "Nice try..." << endl;
+			return 0;
+		} else {
+			result = left.divide(right);
+		}
 		break;
 	case FACTORIAL:
 		result = left.factorial(right);
