@@ -29,7 +29,7 @@ public:
 	void setNumber(const char* nuNumber, int nuSize);
 	/// convert '0' to 0
 	void zero();
-	void print();
+	void print() const;
 	char* copyNumberToDevice() const;
 	void copyNumberFromDevice(char* d_number);
 

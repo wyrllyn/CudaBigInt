@@ -55,12 +55,27 @@ __device__ int update(char* toUpdate, int value) {
  * Note: assumes that both numbers have the same size.
  */
 int isFirstBiggerThanSecond(const char* first, const char* second, int size) {
-	for (int i = 0; i < size; i++) {
+	for (int i = 1; i < size; i++) {
 		if (first[i] > second[i]) return 1;
 		else if (first[i] < second[i]) return 0;
 		else continue;
 	}
-	return 1;
+	return 0;
+}
+
+bool isFirstBiggerThanSecond_2(const char* first, const char* second, int size_f, int size_s) {
+	if (size_f > size_s) {
+		return true;
+	}
+	else if (size_s > size_f) {
+		return false;
+	}
+	else if (isFirstBiggerThanSecond(first, second, size_f) == 1) {
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
 

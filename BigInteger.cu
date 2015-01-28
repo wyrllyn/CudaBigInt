@@ -61,7 +61,7 @@ void BigInteger::zero() {
 	}
 }
 
-void BigInteger::print() {
+void BigInteger::print() const {
 	cout << number[0];
 	for (int i = 1; i < size; i++) {
 		cout << (int) number[i] << "`";
@@ -120,6 +120,7 @@ void BigInteger::applyMulCarry() {
 ///
 
 BigInteger BigInteger::add(const BigInteger& other) {
+
 	char* d_number = copyNumberToDevice();
 	char* d_other_number = other.copyNumberToDevice();
 
@@ -131,15 +132,59 @@ BigInteger BigInteger::add(const BigInteger& other) {
 	char* d_newB = result.copyNumberToDevice();
 	
 	dim3 grid(1), block(size_b + 1);
-	
-	if (other.size > size) {
-		kernel_add<<<grid, block>>>(d_newB, d_other_number, d_number, other.size, other.size - size, &size_b);
-	} else {
-		kernel_add<<<grid, block>>>(d_newB, d_number, d_other_number, size, size - other.size, &size_b);
+
+	if (number[0] == other.number[0]) {	
+		if (other.size > size) {
+			kernel_add<<<grid, block>>>(d_newB, d_other_number, d_number, other.size, other.size - size, &size_b);
+		} else {
+			kernel_add<<<grid, block>>>(d_newB, d_number, d_other_number, size, size - other.size, &size_b);
+		}
+		result.copyNumberFromDevice(d_newB);
+		result.applyAddCarry();
+		if (number[0] == '-') {
+			result.number[0] = '-';
+		}
+	}
+	else {
+		// check where minus is
+		if(other.number[0] == '-') {
+			// check size of the number with minus
+			if (isFirstBiggerThanSecond_2(number, other.number, size, other.size)) {
+				cout << "test" << endl;
+				// HERE
+				kernel_sub<<<grid, block>>>(d_newB, d_number, d_other_number, size, size - other.size, &size_b);
+				//(d_newB, d_number, d_other_number, size, size - other.size, &size_b
+				result.copyNumberFromDevice(d_newB);
+				result.print();
+				result.applySubCarry();
+			}
+			else {
+				kernel_sub<<<grid, block>>>(d_newB, d_other_number, d_number, other.size, other.size - size, &size_b);
+				result.copyNumberFromDevice(d_newB);
+				result.applySubCarry();
+				result.number[0] = '-';
+			}
+
+		}
+		else {
+			// check size of the number with minus
+			if (isFirstBiggerThanSecond_2(number, other.number, size, other.size)) {
+				cout << "hey add" << endl;
+				kernel_sub<<<grid, block>>>(d_newB, d_number, d_other_number, size, size - other.size, &size_b);
+				result.copyNumberFromDevice(d_newB);
+				result.applySubCarry();
+				result.number[0] = '-';
+			}
+			else {
+				// HERE
+				kernel_sub<<<grid, block>>>(d_newB, d_other_number, d_number, other.size, other.size - size, &size_b);
+				result.copyNumberFromDevice(d_newB);
+				result.applySubCarry();
+			}
+		}
 	}
 
-	result.copyNumberFromDevice(d_newB);
-	result.applyAddCarry();
+	
 	return result;
 }
 
@@ -154,12 +199,46 @@ BigInteger BigInteger::substract(const BigInteger& other) {
 	BigInteger result(size_b + 1);
 	char* d_newB = result.copyNumberToDevice();
 	
-	dim3 grid(1), block(size_b + 1);
+	dim3 grid(1), block(size_b + 10);
 
-	kernel_sub<<<grid, block>>>(d_newB, d_number, d_other_number, size, size - other.size, &size_b);
+	if (number[0] != other.number[0]) {
+		if (isFirstBiggerThanSecond_2(number, other.number, size, other.size))
+			kernel_add<<<grid, block>>>(d_newB, d_number, d_other_number, size, size - other.size, &size_b);
+		else
+			kernel_add<<<grid, block>>>(d_newB, d_other_number, d_number, other.size, other.size - size, &size_b);
+		result.copyNumberFromDevice(d_newB);
+		result.applyAddCarry();
+		if (number[0] == '-') {
+			result.number[0] = '-';
+		}
+	}
+	else {
+		if(isFirstBiggerThanSecond_2(number, other.number, size, other.size)) {
+			cout << "hey" << endl;
+		//	kernel_sub<<<grid, block>>>(d_newB, d_number, d_other_number, size, size - other.size, &size_b);
+			kernel_sub<<<grid, block>>>(d_newB, d_number, d_other_number, size, size - other.size, &size_b);
+			result.copyNumberFromDevice(d_newB);
+			print();
+			other.print();
+			result.print();
+			result.applySubCarry();
+			if (number[0] == '-') {
+				result.number[0] = '-';
+			}
+		}
+		else {
+			kernel_sub<<<grid, block>>>(d_newB, d_other_number, d_number, other.size, other.size - size, &size_b);
+			result.copyNumberFromDevice(d_newB);
+			result.applySubCarry();
+			if (number[0] == '+') {
+				result.number[0] = '-';
+		}
+		}
+	}
 
-	result.copyNumberFromDevice(d_newB);
-	result.applySubCarry();
+	
+
+	
 	return result;
 }
 
