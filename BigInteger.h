@@ -32,10 +32,12 @@ public:
 	void print() const;
 	char* copyNumberToDevice() const;
 	void copyNumberFromDevice(char* d_number);
+	/// reinitialize number array
+	void reset();
 
 	void applyAddCarry();
 	void applySubCarry();
-	void applyMulCarry();
+	BigInteger applyMulCarry(int, int, int);
 
 	BigInteger add(const BigInteger& other);
 	BigInteger substract(const BigInteger& other);

@@ -6,7 +6,7 @@ using namespace std;
 
 
 int main(int argc, char** argv) {
-	cout << "This program assumes that its user enters coherent arguments (op number number), such as * -25 12" << endl;
+	cout << "This program assumes that its user enters coherent arguments (op number number), such as + -25 12" << endl;
 	cout << "Enter boggus data at your own risks..." << endl;
 
 	BigInteger left, right;
@@ -68,47 +68,6 @@ int main(int argc, char** argv) {
 	cudaEventElapsedTime(&elapsed_time, start, stop);
 	cout << "time: " << elapsed_time << " ms" << endl;
 	result.print();
-
-	///
-	/// Testing block
-	///
-	/*#define SIZE_FIRST 2
-	#define SIZE_SECOND 2
-	#define NU_SIZE 4
-	char* nu = new char[NU_SIZE], * g_nu;
-	char* first = new char[SIZE_FIRST];
-	first[0] = 3; first[1] = 5;
-	char* second = new char[SIZE_SECOND];
-	second[0] = 2; second[1] = 0; // second[2] = 2;
-	int nuSize = NU_SIZE;*/
-	/*
-	char* g_first, *g_second;
-	cudaMalloc( (void**) &g_first, sizeof(char) * 2 );
-	cudaMalloc( (void**) &g_second, sizeof(char) * 2 );
-	cudaMalloc( (void**) &g_nu, sizeof(char) * 2 );
-	cudaMemcpy(g_first, first, sizeof(char) * 2, cudaMemcpyHostToDevice);
-	cudaMemcpy(g_second, second, sizeof(char) * 2, cudaMemcpyHostToDevice);
-	kernel_add<<<grid, block>>>(g_nu, g_first, g_second, 2, 2, &nuSize);
-	cudaMemcpy(nu, g_nu, sizeof(char) * 2, cudaMemcpyDeviceToHost);
-	*/
-	//kernel_add(nu, first, second, SIZE_FIRST, SIZE_FIRST - SIZE_SECOND, &nuSize);
-	//kernel_div(nu, first, second, SIZE_FIRST, SIZE_FIRST - SIZE_SECOND, &nuSize);
-	//kernel_mul(nu, first, second, SIZE_FIRST, /*SIZE_FIRST -*/ SIZE_SECOND, &nuSize);
-	/*for (int i = 0; i < SIZE_FIRST; i++) {
-		cout << (int) first[i];
-	}
-	cout << " * ";
-	for (int i = 0; i < SIZE_SECOND; i++) {
-		cout << (int) second[i];
-	}
-	cout << " = ";
-	for (int i = 0; i < nuSize; i++) {
-		cout << (int) nu[i];
-	}
-	cout << endl;*/
-	///
-	/// End of testing block
-	///
 }
 
 
