@@ -50,7 +50,7 @@ public:
 	BigInteger substract(const BigInteger& other);
 	BigInteger multiply(const BigInteger& other);
 	BigInteger divide(const BigInteger& other);
-	BigInteger factorial(const BigInteger& other);
+	BigInteger factorial();
 	BigInteger greatestCommonDivisor(const BigInteger& other);
 };
 

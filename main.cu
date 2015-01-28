@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
 		}
 		break;
 	case FACTORIAL:
-		result = left.factorial(right);
+		result = left.factorial();
 		break;
 	case GCD:
 		result = left.greatestCommonDivisor(right);
