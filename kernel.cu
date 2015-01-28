@@ -84,57 +84,16 @@ __global__ void kernel_sub(char* newB, char* first, char* second, int size_bigge
 	//}
 }
 
-// first is the bigInt with de biggest size
+// first is the bigInt with the biggest size
 __global__ void kernel_mul(char* newB,  char* first, char* second, int size_first, int size_second, int * size_newB) {
-/*#if __CUDA_ARCH__>=200
-printf("une connerie%d\n", threadIdx.x);
-#endif*/
 
-	int index = 0;
-	int tmp = 0;
-	int tmp_second = 0;
-	int carry = 0;
-	int carry_second = 0;
 	int i = threadIdx.x;
 	int j = threadIdx.y;
 
-	index = (j-1) + (i-1) + 2 ;
-	/* Exemple: 12*12 
-		-> newB[2]= 1*1    
-		-> newB[3]=(1*2)+(2*1) -> ne marche pas ici car les threads écrivent en même temps dans la même variable
-		-> newB[4]=2*2
+	int tid = j * gridDim.x * blockDim.x + i ;
 
-	 Solution au problème de retenue + propagation :
-	 	-> au lieu de char* newB utiliser un char** newB où l'on mettrait les valeurs dans newB[index][tid] (calcul tid G1DB2D)
-	 	puis on utilise une fonction hors du kernel pour ajouter tous les newB[index][i] à newB[index][0] ou un autre char*
-	 	mais du coup la gestion de la retenue n'est pas parallélisée 
-	*/
-
-
-
-	//for (int i = size_second - 1; i >= 0; i--) {
-	//index = (*size_newB) - size_second + i + (j - size_first);
-/*#if __CUDA_ARCH__>=200
-	printf("#threadIdx.x (i) = %d\n", threadIdx.x);
-	printf("#threadIdx.y (j) = %d\n", threadIdx.y);
-	printf("#index = %d\n", index);
-#endif*/
-		//for (int j = size_first - 1; j >= 0 ; j--) {
 	if(j!=0 && i!=0){
-		tmp = first[i] * second[j] + carry;
-		while (tmp >= 10) {
-			tmp -= 10;
-			carry++;
-		}
-		newB[index - 1] += carry;
-
-		tmp_second = newB[index] + tmp;
-		if (tmp_second >= 10) {
-			tmp_second = tmp_second % 10;
-			carry_second = 1;
-		}
-		newB[index - 1] += carry_second;
-		newB[index] += tmp_second;
+		newB[tid] = first[i] * second[j];
 	}
 
 	if(j==0 && i==0){
@@ -147,70 +106,52 @@ printf("une connerie%d\n", threadIdx.x);
 
 
 
-// first is the bigInt with de biggest size
-/*__global__*/ /*void kernel_mul(char* newB,  char* first, char* second, int size_first, int size_second, int * size_newB) {
-	(*size_newB) = size_first + size_second;
-	init(*size_newB, newB);
-	int index = 0;
-	int tmp = 0;
-	int tmp_second = 0;
-	int carry = 0;
-	int carry_second = 0;
-
-	for (int i = size_second - 1; i >= 0; i--) {
-		index = (*size_newB) - size_second + i ;
-		for (int j = size_first - 1; j >= 0 ; j--) {
-			//cout << "i = " << i << " j= " << j << " index = " << index << endl;
-			tmp = first[j] * second[i] + carry;
-			//cout << "1 tmp = " << tmp << endl;
-			carry = 0;
-			while (tmp >= 10) {
-				tmp -= 10;
-				carry++;
-			}
-		//	cout << "2 tmp = " << tmp << endl;
-		//	cout << "carry = " << carry << endl;
-
-			tmp_second = newB[index] + tmp + carry_second;
-			if (tmp_second >= 10) {
-		//		cout << " test second " << endl;
-				tmp_second = tmp_second % 10;
-				carry_second = 1;
-			}
-			newB[index] = tmp_second;
-			index --;
-			if (carry > 0 && j == 0) {
-		//		cout << "test" << endl;
-				newB[index] = carry;
-			}
-		}
-
-
-		// add values : how ??
-	}
-}*/
-
-
-
+/// Unused - see BigInteger::divide()
 /**
  * first is divided by second.
  * Note: since we are working with integers, the quotient can't be bigger than the dividend.
  * Also, if the divisor is bigger than the dividend, then the result is zero.
  */
-void kernel_div(char* newB, const char* first, const char* second, int size_first, int size_second, int * size_newB) {
-	if (size_first > size_second
-		|| (size_first == size_second && isFirstBiggerThanSecond(first, second, size_first))
-	) {
-		*size_newB = size_first;
-	} else {
-		*size_newB = 1;
-		init(*size_newB, newB);
+__global__ void kernel_div(char* newB, char* first, char* second, int size_first, int size_second, int * size_newB, char* aux) {
+	int i = threadIdx.x;
+	int j = threadIdx.y;
+
+	if(j==0 && i==0){
+		if(first[j]=='-' || second[i]=='-')
+			newB[0]='-';
+		else
+			newB[0]='+';
 		return;
 	}
 
+#if __CUDA_ARCH__>=200
+	printf("#i, j = %d, %d\n", i, j);
+#endif
+	// adapted from kernel_sub
+	int diff = size_first - size_second;
+	int tmp = 0;
+	if (j - 1 - diff >= 0 && (second[j - 1 - diff] != '+' && second[j - 1 - diff] != '-')) {
+		tmp = first[j - 1] - second[j-1-diff];
+	} else if (first[j - 1] != '+' && first[j - 1] != '-') {
+		tmp = first[j - 1];
+	}
 
+	if (tmp < 0) {
+		// warning 10 - tmp ?
+		aux[i * size_first + j - 1]--;
+		tmp += 10;
+	}
+	if (i != 0)
+		aux[i * size_first + j] += tmp;
+	// end of kernel_sub
+
+#if __CUDA_ARCH__>=200
+	printf("#aux = %d\n", aux[i * size_first + j]);
+#endif
+
+/*
 	char* temp = NULL;
-	init(size_second + 1, temp);
+	//init(size_second + 1, temp);
 	int t = 0; // temp's index
 	int n = 0; // newB's index
 	for (int i = size_first - 1; i >= 0; i -= t) {
@@ -238,7 +179,7 @@ void kernel_div(char* newB, const char* first, const char* second, int size_firs
 		char res = 0;
 		char* sub_res = NULL;
 		int size_res = 0;
-		init(size_second, sub_res);
+		//init(size_second, sub_res);
 		do {		
 			//kernel_sub(sub_res, temp, second, size_second, size_second, &size_res);
 			res++;
@@ -251,7 +192,7 @@ void kernel_div(char* newB, const char* first, const char* second, int size_firs
 	int diff = size_second - n;
 	for (int i = size_second - 1; i > n; i++) {
 		newB[i] = newB[i - diff];
-	}
+	}*/
 }
 
 
