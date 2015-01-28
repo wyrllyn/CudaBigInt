@@ -18,7 +18,7 @@ OperationType identifyOperationType(const char* op) {
 		return DIVIDE;
 	} else if (op[0] == '!') {
 		return FACTORIAL;
-	} else if (op == "pgcd") {
+	} else if (op[0] == 'p') {
 		return GCD;
 	} else {
 		return ERROR;
@@ -111,7 +111,7 @@ BigInteger BigInteger::applyMulCarry(int size_result, int size_first, int size_s
 	char * tmp_result;
 	BigInteger result(size_result);
 	
-	tmp_result = new char(size_result);
+	tmp_result = new char[size_result];
 
 	for(i=0; i<size_result; i++)
 		tmp_result[i] = 0;
@@ -133,7 +133,7 @@ BigInteger BigInteger::applyMulCarry(int size_result, int size_first, int size_s
 	}
 	// Signe du résultat
 	tmp_result[0] = number[0];
-	
+
 	result.setNumber(tmp_result, size_result);
 	return result;
 }
@@ -222,6 +222,67 @@ BigInteger BigInteger::factorial(const BigInteger& other) {
 }
 
 BigInteger BigInteger::greatestCommonDivisor(const BigInteger& other) {
+	char* d_number = copyNumberToDevice();
+	char* d_other_number = other.copyNumberToDevice();
+
+	BigInteger first_tmp(size);
+	BigInteger second_tmp(other.size);
+	bool nul, trouve;
+	int i;
+
+	trouve = false;
+
+	int size_b = size;
+	if (other.size > size)
+		size_b = other.size;
+	
+	BigInteger sub(size_b + 1);
+	char* d_newB = sub.copyNumberToDevice();
+
+	first_tmp.copyNumberFromDevice(d_number);
+	second_tmp.copyNumberFromDevice(d_other_number);
+
+	while(!trouve){
+		nul = true;
+		dim3 grid(1), block(size_b + 1);
+
+		kernel_sub<<<grid, block>>>(d_newB, d_number, d_other_number, size, size - other.size, &size_b);
+
+		sub.copyNumberFromDevice(d_newB);
+		sub.applySubCarry();
+
+		cout << "First: ";
+		first_tmp.print();
+		cout << " Second: ";
+		second_tmp.print();
+		cout << " Sub: ";
+		sub.print();
+		cout << endl;
+
+		for(i=1; i<size_b+1; i++){
+			cout << "Sub[i]: " << (int)sub.number[i] << endl;
+			if(sub.number[i]!=0)
+				nul = false;
+		}
+
+		if(sub.number[0]=='-'){
+			first_tmp.copyNumberFromDevice(d_other_number);
+			second_tmp.copyNumberFromDevice(d_newB);
+			d_number = first_tmp.copyNumberToDevice();
+			d_other_number = second_tmp.copyNumberToDevice();
+			
+		}
+		else if(nul){
+			trouve = true;
+			second_tmp.copyNumberFromDevice(d_other_number);
+			return second_tmp;
+		}
+		else{
+			first_tmp.copyNumberFromDevice(d_newB);
+			d_number = first_tmp.copyNumberToDevice();
+		}
+
+	}
 
 }
 

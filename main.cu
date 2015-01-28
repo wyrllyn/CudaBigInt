@@ -21,6 +21,7 @@ int main(int argc, char** argv) {
 		case SUBSTRACT:
 		case MULTIPLY:
 		case DIVIDE:
+		case GCD:
 			right.setNumber(argv[3], string(argv[3]).size());
 			right.zero();
 			break;
