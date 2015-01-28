@@ -400,8 +400,8 @@ BigInteger BigInteger::divide(const BigInteger& other) {
 	int it_count = 0;
 	do {
 		it_count++;
-		cout << "___Iteration #" << it_count << endl;
-		cout << "beginning phase 1" << endl;
+		//cout << "___Iteration #" << it_count << endl;
+		//cout << "beginning phase 1" << endl;
 		int temp_index = rest_size + 1;
 		for (int i = dividend_index; i < size; i++) {
 			temp.number[temp_index] = number[i];
@@ -427,10 +427,10 @@ BigInteger BigInteger::divide(const BigInteger& other) {
 				}
 			}
 		}
-		cout << "end of phase 1, with temp: ";temp.print();
-		cout << "dividend_index is at " << dividend_index << "(=" << (int)number[dividend_index] << ")" << endl;
-		cout << "temp_index is at " << temp_index << endl;
-		cout << "beginning phase 2" << endl;
+		//cout << "end of phase 1, with temp: ";temp.print();
+		//cout << "dividend_index is at " << dividend_index << "(=" << (int)number[dividend_index] << ")" << endl;
+		//cout << "temp_index is at " << temp_index << endl;
+		//cout << "beginning phase 2" << endl;
 		BigInteger sub_res(other.size);
 		char res = 0;
 		do {
@@ -440,22 +440,22 @@ BigInteger BigInteger::divide(const BigInteger& other) {
 				res++;
 			}
 		} while (sub_res.number[0] == '+');
-		cout << "end of phase 2, with res=" << (int)res << " and temp:"; temp.print();
-		cout << "beginning of phase 3" << endl;
+		//cout << "end of phase 2, with res=" << (int)res << " and temp:"; temp.print();
+		//cout << "beginning of phase 3" << endl;
 		result_vector.push_back(res);
 		temp.alignLeft(&rest_size);
 		temp.shrink(rest_size + 1);
-		cout << "end of phase 3, with rest_size=" << rest_size << " and temp:"; temp.print();
-		cout << "loop condition: " << dividend_index << " < " << size  << " : " << (dividend_index <= size) << endl;
-		cout << "___end of iteration #" << it_count << endl;
+		//cout << "end of phase 3, with rest_size=" << rest_size << " and temp:"; temp.print();
+		//cout << "loop condition: " << dividend_index << " < " << size  << " : " << (dividend_index <= size) << endl;
+		//cout << "___end of iteration #" << it_count << endl;
 	} while (dividend_index < size);
 
 	// stuff vector into result
-	cout << "result_vector contents: ";
+	//cout << "result_vector contents: ";
 	for (int c = 0; c < result_vector.size(); c++) cout << (int) result_vector[c] << " ";
 	cout << endl;
 	result.stuffVector(result_vector);
-	cout << "Final result:"; result.print();
+	//cout << "Final result:"; result.print();
 	return result;
 }
 
