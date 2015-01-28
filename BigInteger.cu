@@ -459,8 +459,27 @@ BigInteger BigInteger::divide(const BigInteger& other) {
 	return result;
 }
 
-BigInteger BigInteger::factorial(const BigInteger& other) {
-	return BigInteger(0);
+BigInteger BigInteger::factorial() {
+	BigInteger other;
+	other.setNumber("+1", 2);
+	other.zero();
+	// MODIFY
+//	int size_b = 100;
+	BigInteger result;
+	result.setNumber("+1", 2);
+	result.zero();
+	
+	BigInteger tmp(2);
+	tmp.setNumber("+1", 2);
+	tmp.zero();
+	char * d_tmp = tmp.copyNumberToDevice();
+	while (isFirstBiggerThanSecond_2(number, other.number, size, other.size)) {
+		other = other.add(tmp);
+		result = result.multiply(other);
+	}
+
+	result.resize();
+	return result;
 }
 
 BigInteger BigInteger::greatestCommonDivisor(const BigInteger& other) {

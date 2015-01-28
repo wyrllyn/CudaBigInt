@@ -1,4 +1,7 @@
 #include "utility.h"
+#include <iostream>
+
+using namespace std;
 
 bool isNeg(char* bi) {
 	if (bi[0] == '-') {

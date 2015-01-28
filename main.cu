@@ -11,7 +11,10 @@ int main(int argc, char** argv) {
 
 	BigInteger left, right;
 	OperationType opType;
-	cout << argv[1] << " " << argv[2] << " " << argv[3] << endl;
+	if (argc > 3)
+		cout << argv[1] << " " << argv[2] << " " << argv[3] << endl;
+	else
+		cout << argv[1] << " " << argv[2] << endl;
 	if (argc >= 2) {
 		opType = identifyOperationType(argv[1]);
 		left.setNumber(argv[2], string(argv[2]).size());
@@ -24,6 +27,8 @@ int main(int argc, char** argv) {
 		case GCD:
 			right.setNumber(argv[3], string(argv[3]).size());
 			right.zero();
+			break;
+		case FACTORIAL:
 			break;
 		case ERROR:
 			cout << "Unrecognised operation type: " << argv[1] << endl;
