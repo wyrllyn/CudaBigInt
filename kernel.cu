@@ -97,7 +97,7 @@ __global__ void kernel_mul(char* newB,  char* first, char* second, int size_firs
 	}
 
 	if(j==0 && i==0){
-		if(first[j]=='-' || second[i]=='-')
+		if(first[j] != second[i])
 			newB[0]='-';
 		else
 			newB[0]='+';
